@@ -16,7 +16,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 for m in st.session_state.messages:
-    with st.chat_message(m["role"], avatar="🧑‍💻" if m["role"] == "user" else "Z"):
+    with st.chat_message(m["role"], avatar="🧑‍💻" if m["role"] == "user" else "🤖"):
         if m["type"] == "image":
             st.image(m["content"], caption=m["caption"])
         else:
@@ -26,8 +26,7 @@ def speak(text):
     safe = text.replace(chr(34), chr(39)).replace(chr(10), chr(32))
     js = "const u=new SpeechSynthesisUtterance(" + repr(safe) + ");u.rate=1;window.speechSynthesis.speak(u);"
     components.html("<script>" + js + "</script>", height=0)
-
-def reply(prompt, history):
+    def reply(prompt, history):
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     r = client.chat.completions.create(model="openai/gpt-oss-20b", messages=[{"role":"system","content":"You are Zylo, a friendly concise AI assistant."}, *history])
     return r.choices[0].message.content
@@ -44,10 +43,10 @@ if voice:
         st.session_state.messages.append({"role":"user","content":"🎙️ "+prompt,"type":"text"})
         with st.chat_message("user", avatar="🧑‍💻"):
             st.markdown("🎙️ "+prompt)
-        with st.chat_message("assistant", avatar="Z"):
+                    with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("Thinking..."):
+                history=[{"role":m["role"],"content":m["content"]} for m in st.session_state.messages if m["type"]=="text"]
                 try:
-                    history=[{"role":m["role"],"content":m["content"]} for m in st.session_state.messages if m["type"]=="text"]
                     answer=reply(prompt,history)
                 except Exception as e:
                     answer="Connection issue: "+str(e)
@@ -63,15 +62,15 @@ if prompt := st.chat_input("Ask Zylo anything..."):
     if prompt.lower().startswith("/image "):
         desc=prompt[7:].strip()
         url="https://image.pollinations.ai/prompt/"+urllib.parse.quote(desc)+"?width=768&height=768&nologo=true"
-        with st.chat_message("assistant", avatar="Z"):
+        with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("Creating image..."):
                 st.image(url, caption=desc)
         st.session_state.messages.append({"role":"assistant","content":url,"caption":desc,"type":"image"})
     else:
-        with st.chat_message("assistant", avatar="Z"):
+        with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("Thinking..."):
+                history=[{"role":m["role"],"content":m["content"]} for m in st.session_state.messages if m["type"]=="text"]
                 try:
-                    history=[{"role":m["role"],"content":m["content"]} for m in st.session_state.messages if m["type"]=="text"]
                     answer=reply(prompt,history)
                 except Exception as e:
                     answer="Connection issue: "+str(e)
